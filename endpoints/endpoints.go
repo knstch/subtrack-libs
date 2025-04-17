@@ -7,6 +7,8 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 
 	"github.com/gorilla/mux"
+
+	"github.com/knstch/subtrack-libs/transport"
 )
 
 type Middleware func(endpoint.Endpoint) endpoint.Endpoint
@@ -30,6 +32,12 @@ func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 		handler := ep.Handler
 		for _, mw := range ep.Mdw {
 			handler = mw(handler)
+		}
+
+		if len(ep.Opts) != 0 {
+			ep.Opts = append(ep.Opts, httptransport.ServerErrorEncoder(transport.EncodeError))
+		} else {
+			ep.Opts = []httptransport.ServerOption{httptransport.ServerErrorEncoder(transport.EncodeError)}
 		}
 
 		r.Methods(ep.Method).Path(ep.Path).Handler(httptransport.NewServer(
