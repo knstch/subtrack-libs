@@ -40,11 +40,13 @@ func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 			ep.Opts = []httptransport.ServerOption{httptransport.ServerErrorEncoder(transport.EncodeError)}
 		}
 
+		opts := append(ep.Opts, httptransport.ServerErrorEncoder(transport.EncodeError))
+
 		r.Methods(ep.Method).Path(ep.Path).Handler(httptransport.NewServer(
 			handler,
 			ep.Decoder,
 			ep.Encoder,
-			ep.Opts...,
+			opts...,
 		))
 	}
 
