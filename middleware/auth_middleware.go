@@ -29,12 +29,12 @@ func WithCookieAuth(secret string) Middleware {
 				return "", svcerrs.ErrForbidden
 			}
 
-			claims, err := decodeToken(secret, strAuthHeader)
+			claims, err := decodeToken(secret, strings.TrimSpace(strAuthHeader[len(prefix):]))
 			if err != nil {
 				return "", svcerrs.ErrForbidden
 			}
 
-			ctx = context.WithValue(ctx, "claims", claims)
+			ctx = context.WithValue(ctx, "claims", *claims)
 
 			return next(ctx, request)
 		}

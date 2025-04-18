@@ -33,7 +33,10 @@ func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 			handler = mw(handler)
 		}
 
-		opts := append(ep.Opts, httptransport.ServerErrorEncoder(transport.EncodeError))
+		opts := append(ep.Opts,
+			httptransport.ServerErrorEncoder(transport.EncodeError),
+			httptransport.ServerBefore(httptransport.PopulateRequestContext),
+		)
 
 		r.Methods(ep.Method).Path(ep.Path).Handler(httptransport.NewServer(
 			handler,
