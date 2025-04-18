@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	github.com/go-kit/kit v0.13.0
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/gorilla/mux v1.8.1
 )
 

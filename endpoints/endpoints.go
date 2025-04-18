@@ -8,10 +8,9 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/knstch/subtrack-libs/middleware"
 	"github.com/knstch/subtrack-libs/transport"
 )
-
-type Middleware func(endpoint.Endpoint) endpoint.Endpoint
 
 type Endpoint struct {
 	Method  string
@@ -21,7 +20,7 @@ type Endpoint struct {
 	Encoder httptransport.EncodeResponseFunc
 	Req     interface{}
 	Res     interface{}
-	Mdw     []Middleware
+	Mdw     []middleware.Middleware
 	Opts    []httptransport.ServerOption
 }
 
@@ -32,12 +31,6 @@ func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 		handler := ep.Handler
 		for _, mw := range ep.Mdw {
 			handler = mw(handler)
-		}
-
-		if len(ep.Opts) != 0 {
-			ep.Opts = append(ep.Opts, httptransport.ServerErrorEncoder(transport.EncodeError))
-		} else {
-			ep.Opts = []httptransport.ServerOption{httptransport.ServerErrorEncoder(transport.EncodeError)}
 		}
 
 		opts := append(ep.Opts, httptransport.ServerErrorEncoder(transport.EncodeError))

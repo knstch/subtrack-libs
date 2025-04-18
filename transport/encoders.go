@@ -15,6 +15,8 @@ func mapErrorToStatus(err error) int {
 		return http.StatusNotFound
 	case errors.Is(err, svcerrs.ErrUnauthorized):
 		return http.StatusUnauthorized
+	case errors.Is(err, svcerrs.ErrForbidden):
+		return http.StatusForbidden
 	case errors.Is(err, svcerrs.ErrConflict):
 		return http.StatusConflict
 	case errors.Is(err, svcerrs.ErrInvalidData):
