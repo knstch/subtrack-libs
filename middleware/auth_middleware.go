@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"net/http"
 	"strings"
 
 	"github.com/go-kit/kit/endpoint"
@@ -11,24 +10,26 @@ import (
 
 	"github.com/knstch/subtrack-libs/auth"
 	"github.com/knstch/subtrack-libs/svcerrs"
+
+	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 func WithCookieAuth(secret string) Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-			req := request.(http.Request)
-
-			authHeader := req.Header.Get("Authorization")
-			if authHeader == "" {
+			authHeader := ctx.Value(httptransport.ContextKeyRequestAuthorization)
+			if authHeader == nil {
 				return "", svcerrs.ErrForbidden
 			}
+
+			strAuthHeader := authHeader.(string)
 
 			const prefix = "Bearer "
-			if !strings.HasPrefix(authHeader, prefix) {
+			if !strings.HasPrefix(strAuthHeader, prefix) {
 				return "", svcerrs.ErrForbidden
 			}
 
-			claims, err := decodeToken(secret, authHeader)
+			claims, err := decodeToken(secret, strAuthHeader)
 			if err != nil {
 				return "", svcerrs.ErrForbidden
 			}
