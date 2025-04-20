@@ -34,17 +34,17 @@ func WithCookieAuth(secret string) Middleware {
 				return "", svcerrs.ErrForbidden
 			}
 
-			ctx = context.WithValue(ctx, "claims", *claims)
+			ctx = context.WithValue(ctx, "claims", claims)
 
 			return next(ctx, request)
 		}
 	}
 }
 
-func decodeToken(secret string, token string) (*auth.Claims, error) {
-	claims := &auth.Claims{}
+func decodeToken(secret string, token string) (auth.Claims, error) {
+	claims := auth.Claims{}
 
-	_, err := jwt.ParseWithClaims(token, claims, func(jwtToken *jwt.Token) (interface{}, error) {
+	_, err := jwt.ParseWithClaims(token, &claims, func(jwtToken *jwt.Token) (interface{}, error) {
 		if _, ok := jwtToken.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, svcerrs.ErrForbidden
 		}

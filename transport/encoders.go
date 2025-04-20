@@ -21,6 +21,8 @@ func mapErrorToStatus(err error) int {
 		return http.StatusConflict
 	case errors.Is(err, svcerrs.ErrInvalidData):
 		return http.StatusBadRequest
+	case errors.Is(err, svcerrs.ErrGone):
+		return http.StatusGone
 	default:
 		return http.StatusInternalServerError
 	}

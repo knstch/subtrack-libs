@@ -6,10 +6,10 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"github.com/gorilla/mux"
-
 	"github.com/knstch/subtrack-libs/middleware"
 	"github.com/knstch/subtrack-libs/transport"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Endpoint struct {
@@ -25,7 +25,7 @@ type Endpoint struct {
 }
 
 func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
-	r := mux.NewRouter()
+	r := chi.NewRouter()
 
 	for _, ep := range endpoints {
 		handler := ep.Handler
@@ -38,7 +38,7 @@ func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 			httptransport.ServerBefore(httptransport.PopulateRequestContext),
 		)
 
-		r.Methods(ep.Method).Path(ep.Path).Handler(httptransport.NewServer(
+		r.Method(ep.Method, ep.Path, httptransport.NewServer(
 			handler,
 			ep.Decoder,
 			ep.Encoder,
