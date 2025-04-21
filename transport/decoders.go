@@ -13,3 +13,7 @@ func DecodeJSONRequest[T any](_ context.Context, r *http.Request) (interface{}, 
 	}
 	return &req, nil
 }
+
+func DecodeDefaultRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	return r, nil
+}
