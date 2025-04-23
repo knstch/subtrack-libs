@@ -26,13 +26,13 @@ type Endpoint struct {
 
 func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 	r := chi.NewRouter()
+	r.Use(middleware.WithTrackingRequests)
 
 	metrics.InitBasicMetrics()
 
 	for _, ep := range endpoints {
 		handler := ep.Handler
 
-		handler = middleware.WithTrackingRequests(handler)
 		for _, mw := range ep.Mdw {
 			handler = mw(handler)
 		}

@@ -1,31 +1,38 @@
 package middleware
 
 import (
-	"context"
+	"net/http"
+	"strconv"
 	"time"
-
-	"github.com/go-kit/kit/endpoint"
-
-	httptransport "github.com/go-kit/kit/transport/http"
 
 	metrics "github.com/knstch/subtrack-libs/prometeus"
 )
 
-func WithTrackingRequests(next endpoint.Endpoint) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		start := time.Now()
-		resp, err := next(ctx, request)
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
 
-		method, _ := ctx.Value(httptransport.ContextKeyRequestMethod).(string)
-		path, _ := ctx.Value(httptransport.ContextKeyRequestPath).(string)
-		errLabel := "false"
-		if err != nil {
-			errLabel = "true"
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func WithTrackingRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rec := &statusRecorder{ResponseWriter: w}
+		start := time.Now()
+
+		next.ServeHTTP(rec, r)
+
+		duration := time.Since(start).Seconds()
+		path := r.URL.Path
+		status := rec.status
+		if status == 0 {
+			status = 200
 		}
 
-		metrics.RequestCount.With("method", method, "path", path, "error", errLabel).Add(1)
-		metrics.RequestDuration.With("method", method).Observe(time.Since(start).Seconds())
-
-		return resp, err
-	}
+		metrics.RequestCount.With("path", path, "code", strconv.Itoa(status)).Add(1)
+		metrics.RequestDuration.With("path", path, "code", strconv.Itoa(status)).Observe(duration)
+	})
 }

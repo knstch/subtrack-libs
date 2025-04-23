@@ -11,7 +11,7 @@ var (
 )
 
 func InitBasicMetrics() {
-	fieldKeys := []string{"method", "error"}
+	fieldKeys := []string{"path", "code"}
 
 	RequestCount = kitprom.NewCounterFrom(stdprom.CounterOpts{
 		Subsystem: "http",
@@ -24,5 +24,5 @@ func InitBasicMetrics() {
 		Name:      "request_duration_seconds",
 		Help:      "Requests duration",
 		Buckets:   stdprom.DefBuckets,
-	}, []string{"method"})
+	}, fieldKeys)
 }
