@@ -9,6 +9,7 @@ import (
 
 	"github.com/knstch/subtrack-libs/middleware"
 	metrics "github.com/knstch/subtrack-libs/prometeus"
+	"github.com/knstch/subtrack-libs/tracing"
 	"github.com/knstch/subtrack-libs/transport"
 
 	"github.com/go-chi/chi/v5"
@@ -24,7 +25,7 @@ type Endpoint struct {
 	Opts    []httptransport.ServerOption
 }
 
-func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
+func InitHttpEndpoints(serviceName string, endpoints []Endpoint) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.WithTrackingRequests)
 
@@ -32,6 +33,8 @@ func InitHttpEndpoints(endpoints []Endpoint) http.Handler {
 
 	for _, ep := range endpoints {
 		handler := ep.Handler
+
+		handler = tracing.WithTracing(serviceName)(handler)
 
 		for _, mw := range ep.Mdw {
 			handler = mw(handler)
