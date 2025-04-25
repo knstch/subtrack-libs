@@ -86,12 +86,8 @@ func (l *Logger) Debug(msg string, fields ...Message) {
 	l.lg.Debug(msg, getFields(fields...)...)
 }
 
-func (l *Logger) Trace(_ string, _ ...Message) {
-	return
-}
-
-func (l *Logger) With(fields ...Message) Logger {
-	return Logger{
+func (l *Logger) With(fields ...Message) *Logger {
+	return &Logger{
 		lg: l.lg.With(getFields(fields...)...),
 	}
 }
