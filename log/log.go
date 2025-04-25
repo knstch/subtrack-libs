@@ -9,12 +9,16 @@ import (
 type Level string
 
 type Logger struct {
-	*zap.Logger
-	Adapter LoggerAdapter
+	lg *zap.Logger
 }
 
-type LoggerAdapter struct {
-	lg *zap.Logger
+type Message struct {
+	key   string
+	value interface{}
+}
+
+func AddMessage(key string, value interface{}) Message {
+	return Message{key, value}
 }
 
 const (
@@ -53,42 +57,41 @@ func NewLogger(serviceName string, level Level) *Logger {
 			MaxAge:     28,
 		}), zap.ErrorLevel),
 	)
-	lg := zap.New(core)
+
 	return &Logger{
-		lg,
-		LoggerAdapter{lg},
+		lg: zap.New(core),
 	}
 }
 
-func getFields(fields map[string]interface{}) []zap.Field {
+func getFields(fields ...Message) []zap.Field {
 	zapFields := make([]zap.Field, 0, len(fields))
 
-	for k, v := range fields {
-		zapFields = append(zapFields, zap.Any(k, v))
+	for _, v := range fields {
+		zapFields = append(zapFields, zap.Any(v.key, v.value))
 	}
 
 	return zapFields
 }
 
-func (l *LoggerAdapter) Error(msg string, err error, fields map[string]interface{}) {
-	allFields := append([]zap.Field{zap.Error(err)}, getFields(fields)...)
+func (l *Logger) Error(msg string, err error, fields ...Message) {
+	allFields := append([]zap.Field{zap.Error(err)}, getFields(fields...)...)
 	l.lg.Error(msg, allFields...)
 }
 
-func (l *LoggerAdapter) Info(msg string, fields map[string]interface{}) {
-	l.lg.Info(msg, getFields(fields)...)
+func (l *Logger) Info(msg string, fields ...Message) {
+	l.lg.Info(msg, getFields(fields...)...)
 }
 
-func (l *LoggerAdapter) Debug(msg string, fields map[string]interface{}) {
-	l.lg.Debug(msg, getFields(fields)...)
+func (l *Logger) Debug(msg string, fields ...Message) {
+	l.lg.Debug(msg, getFields(fields...)...)
 }
 
-func (l *LoggerAdapter) Trace(_ string, _ map[string]interface{}) {
+func (l *Logger) Trace(_ string, _ ...Message) {
 	return
 }
 
-func (l *LoggerAdapter) With(fields map[string]interface{}) LoggerAdapter {
-	return LoggerAdapter{
-		lg: l.lg.With(getFields(fields)...),
+func (l *Logger) With(fields ...Message) Logger {
+	return Logger{
+		lg: l.lg.With(getFields(fields...)...),
 	}
 }
